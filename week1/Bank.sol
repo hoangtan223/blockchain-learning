@@ -1,7 +1,7 @@
 pragma solidity ^0.4.0;
 
 interface iBank{
-    function deposit(address accountId) payable external;
+    function deposit(address accountId, uint amount) payable external;
 }
 
 contract Bank is iBank {
@@ -19,10 +19,17 @@ contract Bank is iBank {
     mapping (address => account) accounts;
     mapping (uint => saving) savings;
 
-    uint constant interest1Mo = 4;
+        uint constant interest1Mo = 4;
     uint constant interest2Mo = 5;
     uint constant interest3Mo = 6;
     string constant bankName = "Travis first bank";
+
+    bool killed = false;
+
+    modifier canRun { require(killed == false); _;}
+
+    // mapping (uint => uint) accounts;
+    // mapping (uint => string) name;
 
     function depositToMyAccount() payable public {
         accounts[msg.sender].amount = accounts[msg.sender].amount + msg.value;
@@ -88,8 +95,12 @@ contract Bank is iBank {
         return bankName;
     }
 
-    function transferToOtherBank(address bankAddress, address accountAddress) payable public {
+    function transferToOtherBank(address bankAddress, address accountAddress, uint amount) payable public {
         iBank otherBank = iBank(bankAddress);
-        otherBank.deposit(accountAddress);
+
+        otherBank.deposit(accountAddress, amount);
+        accounts[msg.sender].amount -= amount;
+
+        bankAddress.transfer(amount);
     }
 }
