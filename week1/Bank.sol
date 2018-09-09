@@ -19,32 +19,31 @@ contract Bank is iBank {
     mapping (address => account) accounts;
     mapping (uint => saving) savings;
 
-        uint constant interest1Mo = 4;
+    uint constant interest1Mo = 4;
     uint constant interest2Mo = 5;
     uint constant interest3Mo = 6;
     string constant bankName = "Travis first bank";
 
     bool killed = false;
 
-    modifier canRun { require(killed == false); _;}
 
     // mapping (uint => uint) accounts;
     // mapping (uint => string) name;
 
-    function depositToMyAccount() payable public {
+    function depositToMyAccount() public payable {
         accounts[msg.sender].amount = accounts[msg.sender].amount + msg.value;
     }
 
-    function deposit(address accountId) payable external {
+    function deposit(address accountId) external payable {
         accounts[accountId].amount += msg.value;
     }
 
-    function checkMyBalance() view public returns (uint) {
+    function checkMyBalance() public view returns (uint) {
         return accounts[msg.sender].amount;
     }
 
     function withdrawFromMyAccount(uint amount) public {
-        require(accounts[msg.sender].amount > amount);
+        require(accounts[msg.sender].amount > amount, "Amount not enough");
         accounts[msg.sender].amount -= amount;
 
         msg.sender.transfer(amount);
@@ -52,16 +51,16 @@ contract Bank is iBank {
 
 
     function setMyName(string accountName) public {
-        require(bytes(accountName).length <= 64);
+        require(bytes(accountName).length <= 64, "Name cannot be longer than 64 chars");
         accounts[msg.sender].name = accountName;
     }
 
-    function getName() view public returns (string) {
+    function getName() public view returns (string) {
         return accounts[msg.sender].name;
     }
 
     function openSaving(uint amount, uint months) public {
-        require(accounts[msg.sender].amount > amount);
+        require(accounts[msg.sender].amount > amount, "Amount not enough");
         accounts[msg.sender].amount -= amount;
         uint savingId = currentSavingId++;
         savings[savingId].accountOwnerId = msg.sender;
@@ -70,7 +69,7 @@ contract Bank is iBank {
     }
 
     function calculateInterestAfter(uint id, uint months) view public returns (uint) {
-        require(months > 0);
+        require(months > 0, "Invalid month");
 
         uint interest = 0;
 
@@ -82,7 +81,7 @@ contract Bank is iBank {
     }
 
     function closeSavingAccountAfter(uint id, uint months) public {
-        require(savings[id].accountOwnerId == msg.sender);
+        require(savings[id].accountOwnerId == msg.sender, "Not your account");
         accounts[msg.sender].amount += savings[id].amount + calculateInterestAfter(id, months);
         savings[id].amount = 0;
     }
